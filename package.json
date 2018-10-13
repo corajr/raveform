@@ -1,0 +1,31 @@
+{
+  "name": "waveform",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "react": "^16.5.2",
+    "react-dom": "^16.5.2",
+    "reason-scripts": "1.0.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ],
+  "devDependencies": {
+    "@glennsl/bs-jest": "^0.4.4",
+    "bs-fetch": "^0.3.0",
+    "bs-platform": "^4.0.6",
+    "reason-react": "^0.5.3"
+  }
+}
