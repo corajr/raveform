@@ -1903,6 +1903,11 @@ bs-platform@^4.0.6:
   resolved "https://registry.yarnpkg.com/bs-platform/-/bs-platform-4.0.6.tgz#e7f156c77ad3efafb0c0291b41dcf1b06f93c192"
   integrity sha512-TrNzQFoV6opBYdUgcRdgQQ5f6JnKgotPFZORIjuHPtRlYgv37P6xVBTGfA4NlMCkHXHcPrL6JI63GyAcfq+qpg==
 
+bs-webapi@^0.13.0:
+  version "0.13.0"
+  resolved "https://registry.yarnpkg.com/bs-webapi/-/bs-webapi-0.13.0.tgz#c52f3043fcc656d7936b12c214851c64b58aede9"
+  integrity sha512-GmykwZA0A7Yce5ystKMZdyMDPs1+zgIUb7iPPc4zQSasDujhYErMW+0xEFLTatl76JTs/jbXRBcbPJlgIbnq0A==
+
 bsb-js@^1.0.0:
   version "1.1.7"
   resolved "https://registry.yarnpkg.com/bsb-js/-/bsb-js-1.1.7.tgz#12cc91e974f5896b3a2aa8358419d24e56f552c3"
