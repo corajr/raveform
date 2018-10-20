@@ -56,6 +56,7 @@ let animCallback =
       let timeDataFloat =
         Array.map(x => float_of_int(x) /. 128.0 -. 1.0, timeData);
       let waveletData = haar(timeDataFloat);
+      let sliceHeight = height /. float_of_int(n);
       let sliceWidth = width /. float_of_int(n);
 
       globalAlpha(ctx, writeAlpha);
@@ -64,24 +65,25 @@ let animCallback =
       setFillStyle(ctx, String, "red");
       for (i in 0 to n - 1) {
         let rawV = float_of_int(freqData[i]) /. 256.0;
-        let v = rawV;
-        let rectHeight = v *. height;
+        let v = log1p(rawV) /. log(2.0);
+        let rectWidth = v *. width;
         fillRect(
           ctx,
-          ~x=float_of_int(i) *. sliceWidth,
-          ~y=height -. rectHeight,
-          ~w=sliceWidth,
-          ~h=rectHeight,
+          ~x=0.0,
+          ~y=float_of_int(i) *. sliceHeight,
+          ~w=rectWidth,
+          ~h=sliceHeight,
         );
       };
 
+      let logHeight = log(height) /. log(2.0);
       let levelsFloat = log(float_of_int(n)) /. log(2.0);
-      let levelHeight = height /. levelsFloat;
       let levels = int_of_float(levelsFloat);
       for (i in 0 to levels - 1) {
         let power = 2.0 ** float_of_int(i);
         let levelOffset = int_of_float(power);
         let levelWidth = width /. power;
+        let levelHeight = height /. levelsFloat;
         let y = levelHeight *. float_of_int(i);
         for (j in 0 to levelOffset - 1) {
           let x = float_of_int(j) *. levelWidth;
@@ -168,11 +170,12 @@ let make =
   },
   reducer: ((), _state) => ReasonReact.NoUpdate,
   didMount: self => {
-    let analyser = makeAnalyser(~fftSize=1024, audioCtx);
+    let analyser = makeAnalyser(~fftSize=4096, audioCtx);
     self.state.analyser := Some(analyser);
     audioGraph :=
       audioGraph^
       |> addNode((nodeKey, unwrapAnalyser(analyser)))
+      |> addEdge((nodeKey, "sink", 0, 0))
       |> updateConnections;
 
     self.state.animCallbackRef :=
@@ -183,8 +186,8 @@ let make =
           ~canvasHeight=height,
           ~clearAlpha=Some(1.0),
           ~writeAlpha=1.0,
-          ~desiredFps=30.0,
-          ~edgeAlign=true,
+          ~desiredFps=60.0,
+          ~edgeAlign=false,
         ),
       );
   },

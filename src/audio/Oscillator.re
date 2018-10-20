@@ -25,15 +25,16 @@ let make =
     let gainNode = createGain(audioCtx);
     setValue(gain_Get(gainNode), gain);
     self.state.gainRef := Some(gainNode);
+
     let osc = makeOscillator(~audioCtx, ~frequency, ~type_);
     self.state.oscillatorRef := Some(osc);
     connect(osc, gainNode);
     startOscillator(osc);
+
     audioGraph :=
       audioGraph^
       |> addNode((nodeKey, unwrapGain(gainNode)))
       |> addEdge((nodeKey, output, 0, 0))
-      |> addEdge((nodeKey, "sink", 0, 0))
       |> updateConnections;
     self.onUnmount(() =>
       switch (self.state.oscillatorRef^) {
