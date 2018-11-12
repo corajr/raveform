@@ -9,13 +9,20 @@ let make = _children => {
       <AudioContext
         render=(
           ((audioCtx, audioGraph)) =>
-            <div>
-
-                <Raveform audioCtx audioGraph width=512 height=512 />
+            <div
+              style=(
+                ReactDOMRe.Style.make(
+                  ~display="flex",
+                  ~flexDirection="row",
+                  (),
+                )
+              )>
+              <Raveform audioCtx audioGraph width=512 height=512 />
+              <div style=(ReactDOMRe.Style.make(~marginLeft="24px", ()))>
                 <StatefulOscillator nodeKey="osc1" audioCtx audioGraph />
+                <StatefulWavetable audioCtx audioGraph />
               </div>
-              /* <StatefulOscillator nodeKey="osc2" audioCtx audioGraph /> */
-            /* <Wavetable audioCtx audioGraph /> */
+            </div>
         )
       />
     </div>,

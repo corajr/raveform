@@ -47,6 +47,40 @@ let rec inverseHaar = (input: array(float)) : array(float) => {
   };
 };
 
+/*
+   def fwht(a):
+   """In-place Fast Walsh-Hadamard Transform of array a"""
+   h = 1
+   while h < len(a):
+   for i in range(0, len(a), h * 2):
+   for j in range(i, i + h):
+   x = a[j]
+   y = a[j+h]
+   a[j] = x + y
+   a[j+h] = x - y
+   h *= 2
+
+ */
+
+let inplaceFWHT: array(int) => array(int) =
+  a => {
+    let h = ref(1);
+    let n = Array.length(a);
+    while (h^ < n) {
+      for (i in 0 to n / (h^ * 2) - 1) {
+        let i = i * (h^ * 2);
+        for (j in i to i + h^ - 1) {
+          let x = a[j];
+          let y = a[j + h^];
+          a[j] = x + y;
+          a[j + h^] = x - y;
+        };
+      };
+      h := h^ * 2;
+    };
+    a;
+  };
+
 let log2OfWaveletEpsilon = (-8.0);
 let waveletEpsilon = 2.0 ** log2OfWaveletEpsilon;
 

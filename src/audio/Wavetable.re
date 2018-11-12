@@ -2,9 +2,7 @@ open Audio;
 open AudioGraph;
 open Wavelet;
 
-type wavetable =
-  | Function(float => float, int)
-  | Samples(array(float));
+type wavetable = array(float);
 
 let makeBuffer =
     (audioCtx: audioContext, sampleData: array(float))
@@ -89,7 +87,13 @@ let swapDiff = (x, y) => {
   x;
 };
 
-let component = ReasonReact.statelessComponent(__MODULE__);
+type state = {
+  currentWavetable: ref(wavetable),
+  bufferSource: ref(option(audioBufferSourceNode)),
+  gainNode: ref(option(gainNode)),
+};
+
+let component = ReasonReact.reducerComponent(__MODULE__);
 
 let make =
     (
@@ -97,46 +101,71 @@ let make =
       ~audioGraph,
       ~key="defaultWavetable",
       ~output="defaultAnalyser",
+      ~gain=0.5,
       ~playbackRate=1.0,
-      /* ~wavetable=Function(triangleF, 512), */
-      ~wavetable=Samples(sawSamples),
-      /* ~wavetable=Samples( */
-      /*              inverseHaar( */
-      /*                swapDiff(haar(sineSamples), fromText("no")), */
-      /*              ), */
-      /*            ), */
-      /* ~wavetable=Samples(inverseHaar(zeroPad(fromText("hi"), 512))), */
-      /* ~wavetable=Samples( */
-      /*              fractal1d( */
-      /*                Array.to_list(generateSamplesFromFunction(sawF, 7)), */
-      /*                5, */
-      /*              ), */
-      /*            ), */
+      ~wavetable=sawSamples,
       _children,
     ) => {
   ...component,
+  initialState: () => {
+    currentWavetable: ref(wavetable),
+    bufferSource: ref(None),
+    gainNode: ref(None),
+  },
+  reducer: ((), _state) => ReasonReact.NoUpdate,
   didMount: self => {
-    let buffer =
-      switch (wavetable) {
-      | Function(f, samples) => makeBufferFromFunction(audioCtx, f, samples)
-      | Samples(data) => makeBuffer(audioCtx, data)
-      };
+    let buffer = makeBuffer(audioCtx, wavetable);
     let bufferSource = createBufferSource(audioCtx);
     bufferSet(bufferSource, buffer);
     loopSet(bufferSource, true);
     setValue(playbackRateGet(bufferSource), playbackRate);
 
-    let gain = createGain(audioCtx);
-    setValue(gain_Get(gain), 0.5);
-    connect(bufferSource, gain);
+    self.state.bufferSource := Some(bufferSource);
+
+    let gainNode = createGain(audioCtx);
+    setValue(gain_Get(gainNode), gain);
+    connect(bufferSource, gainNode);
     startAudioBufferSourceNode(bufferSource);
+
+    self.state.gainNode := Some(gainNode);
 
     audioGraph :=
       audioGraph^
-      |> addNode((key, unwrapGain(gain)))
+      |> addNode((key, unwrapGain(gainNode)))
       |> addEdge((key, output, 0, 0))
       |> addEdge((key, "sink", 0, 0))
       |> updateConnections;
+
+    self.onUnmount(() =>
+      switch (self.state.bufferSource^) {
+      | Some(bufferSource) => stopAudioBufferSourceNode(bufferSource)
+      | None => ()
+      }
+    );
   },
+  willUpdate: ({oldSelf, newSelf}) =>
+    switch (newSelf.state.bufferSource^, newSelf.state.gainNode^) {
+    | (Some(bufferSource), Some(gainNode)) =>
+      let t = currentTimeGet(audioCtx);
+      setValueAtTime(playbackRateGet(bufferSource), playbackRate, t);
+
+      if (oldSelf.state.currentWavetable^ !== wavetable) {
+        stopAudioBufferSourceNode(bufferSource);
+        let buffer = makeBuffer(audioCtx, wavetable);
+        let bufferSource = createBufferSource(audioCtx);
+        bufferSet(bufferSource, buffer);
+        loopSet(bufferSource, true);
+        setValue(playbackRateGet(bufferSource), playbackRate);
+
+        connect(bufferSource, gainNode);
+        startAudioBufferSourceNode(bufferSource);
+
+        newSelf.state.bufferSource := Some(bufferSource);
+        newSelf.state.currentWavetable := wavetable;
+      };
+
+      setValueAtTime(gain_Get(gainNode), gain, t);
+    | _ => ()
+    },
   render: self => <div />,
 };

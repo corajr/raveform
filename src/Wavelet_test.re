@@ -29,3 +29,20 @@ test("inverseHaar", _ =>
     |> toBeLessThan(0.01)
   )
 );
+
+let sgn = i => i > 0 ? 1 : i == 0 ? 0 : (-1);
+
+describe("inplaceFWHT", () => {
+  open Expect;
+  test("involutive", () =>
+    expect(
+      Array.map(sgn, inplaceFWHT(inplaceFWHT([|1, 0, 1, 0, 0, 1, 1, 0|]))),
+    )
+    |> toEqual([|1, 0, 1, 0, 0, 1, 1, 0|])
+  );
+
+  test("blah", () =>
+    expect(inplaceFWHT([|1, 0, 1, 0, 0, 1, 1, 0|]))
+    |> toEqual([|4, 2, 0, (-2), 0, 2, 0, 2|])
+  );
+});

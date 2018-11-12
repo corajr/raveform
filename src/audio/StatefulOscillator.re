@@ -31,18 +31,18 @@ type waveProperty =
 module FrequencyOrPeriodSelect =
   AdtSelect.Make({
     type t = waveProperty;
-    let default = LinearFrequency;
+    let default = LinearPeriod;
     let options = [|LinearFrequency, LinearPeriod|];
 
     let toString =
       fun
-      | LinearFrequency => "linear-frequency"
-      | LinearPeriod => "linear-period";
+      | LinearFrequency => "frequency"
+      | LinearPeriod => "period";
 
     let fromString =
       fun
-      | "linear-frequency" => LinearFrequency
-      | "linear-period" => LinearPeriod
+      | "frequency" => LinearFrequency
+      | "period" => LinearPeriod
       | _ => default;
   });
 
@@ -67,7 +67,7 @@ let make =
     (~nodeKey, ~audioCtx, ~audioGraph, ~output="defaultAnalyser", _children) => {
   ...component,
   initialState: () => {
-    oscillatorType: Sine,
+    oscillatorType: OscillatorTypeSelect.default,
     selectorType: FrequencyOrPeriodSelect.default,
     frequency: sampleRateGet(audioCtx) /. 512.0,
     gain: 0.25,
@@ -94,79 +94,101 @@ let make =
     },
   render: self =>
     <div>
-      <OscillatorTypeSelect
-        currentType=self.state.oscillatorType
-        onChange=(
-          self.handle((v, {ReasonReact.send}) =>
-            send(SetOscillatorType(v))
+      <h2> (ReasonReact.string("Oscillator: " ++ nodeKey)) </h2>
+      <fieldset>
+        <OscillatorTypeSelect
+          currentType=self.state.oscillatorType
+          onChange=(
+            self.handle((v, {ReasonReact.send}) =>
+              send(SetOscillatorType(v))
+            )
           )
-        )
-      />
-      <FrequencyOrPeriodSelect
-        currentType=self.state.selectorType
-        onChange=(
-          self.handle((v, {ReasonReact.send}) => send(SetSelectorType(v)))
-        )
-      />
-      (
-        switch (self.state.selectorType) {
-        | LinearFrequency =>
-          <input
-            type_="number"
-            step=1.0
-            value=(Js.Float.toString(self.state.frequency))
-            onChange=(
-              self.handle((evt, {ReasonReact.send}) => {
-                let s = ReactEvent.Form.target(evt)##value;
-                let v = float_of_string(s);
-                if (v > 0.0) {
-                  send(SetFrequency(v));
-                };
-              })
+        />
+      </fieldset>
+      <fieldset>
+        <FrequencyOrPeriodSelect
+          currentType=self.state.selectorType
+          onChange=(
+            self.handle((v, {ReasonReact.send}) =>
+              send(SetSelectorType(v))
             )
-          />
-
-        | LinearPeriod =>
-          <input
-            type_="number"
-            step=1.0
-            value=(
-              Js.Float.toString(
-                sampleRateGet(audioCtx) /. self.state.frequency,
+          )
+        />
+        (
+          switch (self.state.selectorType) {
+          | LinearFrequency =>
+            <input
+              type_="number"
+              step=1.0
+              value=(Js.Float.toString(self.state.frequency))
+              onChange=(
+                self.handle((evt, {ReasonReact.send}) => {
+                  let s = ReactEvent.Form.target(evt)##value;
+                  let v = float_of_string(s);
+                  if (v > 0.0) {
+                    send(SetFrequency(v));
+                  };
+                })
               )
-            )
-            onChange=(
-              self.handle((evt, {ReasonReact.send}) => {
-                let s = ReactEvent.Form.target(evt)##value;
-                let v = float_of_string(s);
-                if (v > 0.0) {
-                  send(SetPeriod(v));
-                };
-              })
-            )
-          />
-        /* | MidiNote => */
-        /* <input */
-        /*   type_="number" */
-        /*   step=1.0 */
-        /*   value=( */
-        /*     Js.Int.toString( */
-        /*     freqToMidiNote( */
-        /*       sampleRateGet(audioCtx), */
-        /*       self.state.frequency, */
-        /*     ), */
-        /*   ) */
-        /*   ) */
-        /*   onChange=( */
-        /*     self.handle((evt, {ReasonReact.send}) => { */
-        /*     let s = ReactEvent.Form.target(evt)##value; */
-        /*     let i = int_of_string(s); */
-        /*     send(SetMidiNote(i)); */
-        /*   }) */
-        /*   ) */
-        /*   /> */
-        }
-      )
+            />
+
+          | LinearPeriod =>
+            <input
+              type_="number"
+              step=1.0
+              value=(
+                Js.Float.toString(
+                  sampleRateGet(audioCtx) /. self.state.frequency,
+                )
+              )
+              onChange=(
+                self.handle((evt, {ReasonReact.send}) => {
+                  let s = ReactEvent.Form.target(evt)##value;
+                  let v = float_of_string(s);
+                  if (v > 0.0) {
+                    send(SetPeriod(v));
+                  };
+                })
+              )
+            />
+          /* | MidiNote => */
+          /* <input */
+          /*   type_="number" */
+          /*   step=1.0 */
+          /*   value=( */
+          /*     Js.Int.toString( */
+          /*     freqToMidiNote( */
+          /*       sampleRateGet(audioCtx), */
+          /*       self.state.frequency, */
+          /*     ), */
+          /*   ) */
+          /*   ) */
+          /*   onChange=( */
+          /*     self.handle((evt, {ReasonReact.send}) => { */
+          /*     let s = ReactEvent.Form.target(evt)##value; */
+          /*     let i = int_of_string(s); */
+          /*     send(SetMidiNote(i)); */
+          /*   }) */
+          /*   ) */
+          /*   /> */
+          }
+        )
+      </fieldset>
+      <fieldset>
+        <label> (ReasonReact.string("gain")) </label>
+        <input
+          type_="number"
+          step=0.01
+          value=(Js.Float.toString(self.state.gain))
+          onChange=(
+            self.handle((evt, {ReasonReact.send}) => {
+              let s = ReactEvent.Form.target(evt)##value;
+              let v = float_of_string(s);
+              send(SetGain(v));
+            })
+          )
+        />
+      </fieldset>
       <Oscillator
         nodeKey
         audioCtx
